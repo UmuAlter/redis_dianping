@@ -9,7 +9,9 @@ public class UserHolder {
     public static void saveUser(UserDTO user){
         tl.set(user);
     }
-
+    /**
+     * 获得当前用户
+     */
     public static UserDTO getUser(){
         return tl.get();
     }
