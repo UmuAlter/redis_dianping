@@ -16,7 +16,9 @@ public class RedisIDWorker {
 
     //序列号位数
     private static final int COUNT_BITS = 32;
-
+    /**
+     * 生成订单id
+     */
     @Resource
     private StringRedisTemplate stringRedisTemplate;
     public long nextId(String keyPreFix){
