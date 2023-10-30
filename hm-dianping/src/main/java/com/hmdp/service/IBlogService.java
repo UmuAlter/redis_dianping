@@ -14,7 +14,7 @@ public interface IBlogService extends IService<Blog> {
     Result queryHotBlog(Integer current);
 
     /**
-     * 根据id查询博客
+     * 根据博客id查询博客
      * @param id
      * @return
      */
@@ -33,4 +33,20 @@ public interface IBlogService extends IService<Blog> {
      * @return
      */
     Result queryBlogLikes(Long id);
+
+    /**
+     * 提交点评
+     * 并且将刚发布的消息推送给粉丝们
+     * @param blog
+     * @return
+     */
+    Result saveBlog(Blog blog);
+
+    /**
+     * 滚动分页查询
+     * @param max
+     * @param offset
+     * @return
+     */
+    Result queryBlogOfFollow(Long max, Integer offset);
 }

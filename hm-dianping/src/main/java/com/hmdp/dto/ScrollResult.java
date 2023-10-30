@@ -3,6 +3,9 @@ package com.hmdp.dto;
 import lombok.Data;
 
 import java.util.List;
+/*
+滚动分页查询
+ */
 
 @Data
 public class ScrollResult {
