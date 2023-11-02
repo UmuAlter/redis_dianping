@@ -12,16 +12,21 @@ import com.hmdp.mapper.UserMapper;
 import com.hmdp.service.IUserService;
 import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RegexUtils;
+import com.hmdp.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpSession;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -121,6 +126,66 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public User queryUser(UserDTO userDTO) {
         return query().eq("id", userDTO.getId()).one();
+    }
+
+    /**
+     * 签到
+     * @return
+     */
+    @Override
+    public Result sign() {
+        Long userId = UserHolder.getUser().getId();
+
+        LocalDateTime now = LocalDateTime.now();
+        String suffix = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        String key = USER_SIGN_KEY + userId + suffix;
+
+        int dayOfMonth = now.getDayOfMonth();
+
+        stringRedisTemplate.opsForValue().setBit(key, dayOfMonth-1, true);
+        return Result.ok();
+    }
+
+    /**
+     * 签到统计
+     * @return
+     */
+    @Override
+    public Result signCount() {
+        Long userId = UserHolder.getUser().getId();
+
+        LocalDateTime now = LocalDateTime.now();
+        String suffix = now.format(DateTimeFormatter.ofPattern(":yyyyMM"));
+        String key = USER_SIGN_KEY + userId + suffix;
+
+        int dayOfMonth = now.getDayOfMonth();
+        //获取本月截止到今天为止所有的签到记录 BITFIELD key GET u14 0
+        List<Long> longs = stringRedisTemplate.opsForValue()
+                .bitField(
+                        key,
+                        BitFieldSubCommands.create()
+                                .get(BitFieldSubCommands.BitFieldType.unsigned(dayOfMonth)).valueAt(0)
+                );
+        if(longs == null || longs.isEmpty()){
+            return Result.ok(0);
+        }
+        Long number = longs.get(0);
+        if(number == null || number == 0){
+            return Result.ok(0);
+        }
+        //计算签到结果 最长连续签到数
+        int count = 0;
+        while (true){
+            if((number & 1) == 1){
+                //签到了
+                count++;
+            }else{
+                //断签了
+                break;
+            }
+            number = number >> 1;
+        }
+        return Result.ok(count);
     }
 
     /**

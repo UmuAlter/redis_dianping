@@ -34,4 +34,16 @@ public interface IUserService extends IService<User> {
      * @return
      */
     User queryUser(UserDTO userDTO);
+
+    /**
+     * 签到
+     * @return
+     */
+    Result sign();
+
+    /**
+     * 签到统计
+     * @return
+     */
+    Result signCount();
 }
